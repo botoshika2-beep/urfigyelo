@@ -223,9 +223,13 @@ function startGame() {
 function finish(won, message) {
   if (!gameStarted) return;
   gameStarted = false; state = 'over'; clearTimeout(timerId); clearInterval(timerId); clearInterval(faceCheckId); faceCheckId = null; clearInterval(watchAbsentId); watchAbsentId = null; clearInterval(clockId);
+  let record = Number(localStorage.getItem('urfigyelo-record-level')) || 0;
+  record = Math.max(record, round);
+  localStorage.setItem('urfigyelo-record-level', String(record));
   systemStatus.textContent = won ? 'KÜLDETÉS TELJESÍTVE' : 'KÜLDETÉS MEGSZAKÍTVA';
   $('result-symbol').textContent = won ? '✦' : '✳'; $('result-title').textContent = won ? 'Megmenekültél!' : 'Vesztettél!';
   $('result-copy').textContent = message || 'Eljutottál a küldetés végéig. Az űr most elenged.';
+  $('result-stats').innerHTML = `<span>REKORD SZINT <b>${record}</b></span><span>UTOLSÓ SZINT <b>${round}</b></span>`;
   $('result-modal').classList.remove('hidden'); beep(won ? 820 : 170, .34);
 }
 function reset() {
