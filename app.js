@@ -3,9 +3,65 @@ const intro = $('intro'), game = $('game'), startButton = $('start-button');
 const camera = $('camera'), cameraButton = $('camera-button');
 const gameMessage = $('game-message'), alertOverlay = $('alert-overlay'), returnOverlay = $('return-overlay');
 const gameCard = $('game-card'), systemStatus = $('system-status');
+const playerNameInput = $('player-name');
+const leaderboardConfig = window.LEADERBOARD_CONFIG || {};
 let detector, stream, cameraOn = false, faceVisible = false, gameStarted = false, paused = false;
 let state = 'idle', stateUntil = 0, lastFaceSeenAt = 0, watchAbsentUntil = 0, watchFoundSince = 0, watchAbsentId, round = 0, elapsedStart = 0, pausedAt = 0, timerId, faceCheckId, clockId, rafId;
 let soundOn = true, audioContext, faceScriptPromise, detectingFrame = false, activeTwist = null, doubleStage = false;
+
+function renderLeaderboard(entries = []) {
+  const list = $('leaderboard-list');
+  list.replaceChildren();
+  if (!entries.length) {
+    const empty = document.createElement('li'); empty.className = 'leaderboard-empty'; empty.textContent = 'Még nincs eredmény — te lehetsz az első!'; list.append(empty); return;
+  }
+  entries.forEach((entry, index) => {
+    const row = document.createElement('li'), rank = document.createElement('span'), name = document.createElement('span'), level = document.createElement('b');
+    row.className = 'leaderboard-row'; rank.className = 'leaderboard-rank'; name.className = 'leaderboard-name';
+    rank.textContent = String(index + 1).padStart(2, '0'); name.textContent = entry.name; level.textContent = `${entry.level}. SZINT`;
+    row.append(rank, name, level); list.append(row);
+  });
+}
+async function loadLeaderboard() {
+  const note = $('leaderboard-note');
+  if (!leaderboardConfig.url || !leaderboardConfig.anonKey) {
+    note.textContent = 'A közös ranglista online összekapcsolása még hátravan.'; renderLeaderboard(); return;
+  }
+  try {
+    const response = await fetch(`${leaderboardConfig.url}/rest/v1/urfigyelo_scores?select=player_name,level&order=level.desc,updated_at.asc&limit=10`, {
+      headers: { apikey: leaderboardConfig.anonKey, Authorization: `Bearer ${leaderboardConfig.anonKey}` }
+    });
+    if (!response.ok) throw new Error(`Ranglista hiba (${response.status})`);
+    const entries = await response.json();
+    renderLeaderboard(entries.map(entry => ({ name: entry.player_name, level: entry.level })));
+    note.textContent = 'Közös ranglista · minden játékos eredményével';
+  } catch (error) {
+    note.textContent = 'A közös ranglista most nem érhető el. Próbáld újra később.';
+    console.warn('Ranglista betöltési hiba:', error);
+  }
+}
+function currentPlayerName() { return playerNameInput.value.trim().replace(/\s+/g, ' ').slice(0, 16); }
+function updatePlayerName() {
+  const name = currentPlayerName();
+  startButton.disabled = name.length < 2;
+  if (name) localStorage.setItem('urfigyelo-player-name', name);
+}
+async function savePlayerScore() {
+  const name = currentPlayerName(), nameKey = name.toLocaleLowerCase('hu');
+  if (!leaderboardConfig.url || !leaderboardConfig.anonKey) throw new Error('A közös ranglista még nincs bekötve.');
+  const headers = { apikey: leaderboardConfig.anonKey, Authorization: `Bearer ${leaderboardConfig.anonKey}`, 'Content-Type': 'application/json' };
+  const existingResponse = await fetch(`${leaderboardConfig.url}/rest/v1/urfigyelo_scores?name_key=eq.${encodeURIComponent(nameKey)}&select=level`, { headers });
+  if (!existingResponse.ok) throw new Error('Nem sikerült lekérni a játékos rekordját.');
+  const existing = await existingResponse.json();
+  const record = Math.max(Number(existing[0]?.level) || 0, round);
+  const saveResponse = await fetch(`${leaderboardConfig.url}/rest/v1/urfigyelo_scores?on_conflict=name_key`, {
+    method: 'POST', headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ name_key: nameKey, player_name: name, level: record, updated_at: new Date().toISOString() })
+  });
+  if (!saveResponse.ok) throw new Error('Nem sikerült elmenteni az eredményt.');
+  await loadLeaderboard();
+  return record;
+}
 
 function loadFaceDetectionScript() {
   if (window.FaceDetection) return Promise.resolve();
@@ -151,6 +207,8 @@ function nextLevel(message) {
 }
 
 async function startCamera() {
+  if (currentPlayerName().length < 2) { $('player-name').focus(); $('player-name').setCustomValidity('Adj meg legalább 2 karakteres játékosnevet.'); $('player-name').reportValidity(); return; }
+  $('player-name').setCustomValidity('');
   if (cameraOn) { if (!gameStarted) startGame(); return; }
   intro.classList.add('hidden'); game.classList.remove('hidden'); cameraButton.disabled = true; startButton.disabled = true;
   $('camera-help').textContent = 'A kamera engedélyét kérjük…';
@@ -223,13 +281,17 @@ function startGame() {
 function finish(won, message) {
   if (!gameStarted) return;
   gameStarted = false; state = 'over'; clearTimeout(timerId); clearInterval(timerId); clearInterval(faceCheckId); faceCheckId = null; clearInterval(watchAbsentId); watchAbsentId = null; clearInterval(clockId);
-  let record = Number(localStorage.getItem('urfigyelo-record-level')) || 0;
-  record = Math.max(record, round);
-  localStorage.setItem('urfigyelo-record-level', String(record));
   systemStatus.textContent = won ? 'KÜLDETÉS TELJESÍTVE' : 'KÜLDETÉS MEGSZAKÍTVA';
   $('result-symbol').textContent = won ? '✦' : '✳'; $('result-title').textContent = won ? 'Megmenekültél!' : 'Vesztettél!';
   $('result-copy').textContent = message || 'Eljutottál a küldetés végéig. Az űr most elenged.';
-  $('result-stats').innerHTML = `<span>REKORD SZINT <b>${record}</b></span><span>UTOLSÓ SZINT <b>${round}</b></span>`;
+  $('result-stats').innerHTML = `<span>REKORD SZINT <b>MENTÉS…</b></span><span>UTOLSÓ SZINT <b>${round}</b></span>`;
+  savePlayerScore().then(record => {
+    $('result-stats').innerHTML = `<span>REKORD SZINT <b>${record}</b></span><span>UTOLSÓ SZINT <b>${round}</b></span>`;
+  }).catch(error => {
+    $('result-stats').innerHTML = `<span>REKORD SZINT <b>—</b></span><span>UTOLSÓ SZINT <b>${round}</b></span>`;
+    $('result-copy').textContent += ' Az eredmény mentése most nem sikerült.';
+    console.warn('Eredménymentési hiba:', error);
+  });
   $('result-modal').classList.remove('hidden'); beep(won ? 820 : 170, .34);
 }
 function reset() {
@@ -239,6 +301,11 @@ function reset() {
 }
 startButton.addEventListener('click', startCamera);
 cameraButton.addEventListener('click', startCamera);
+playerNameInput.value = localStorage.getItem('urfigyelo-player-name') || '';
+playerNameInput.addEventListener('input', updatePlayerName);
+playerNameInput.addEventListener('change', updatePlayerName);
+updatePlayerName(); loadLeaderboard();
+if (leaderboardConfig.url && leaderboardConfig.anonKey) setInterval(loadLeaderboard, 30000);
 $('pause-button').addEventListener('click', () => {
   if (!gameStarted) return;
   paused = !paused; gameCard.classList.toggle('paused', paused); $('pause-button').textContent = paused ? '▶   Folytatás' : 'Ⅱ   Szünet';

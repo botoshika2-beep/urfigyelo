@@ -23,7 +23,10 @@
       <div class="eyebrow"><span class="eyebrow-line"></span> EGY JÁTÉK A LÁTHATATLANSÁGRÓL</div>
       <h1>Elég ügyes vagy,<br><span>hogy elbújj?</span></h1>
       <p class="lede">Az űr figyel. Amikor felvillan a riasztás, tüntesd el az arcod a kamera elől. De ne maradj túl sokáig odalent.</p>
+      <label class="player-name-label" for="player-name">JÁTÉKOSNÉV</label>
+      <input class="player-name-input" id="player-name" type="text" maxlength="16" autocomplete="nickname" placeholder="Írd be a neved a ranglistához">
       <div class="intro-actions"><button class="primary-button" id="start-button" type="button"><span>Induljon a játék</span><span class="arrow">↗</span></button><span class="duration">VÉGTELEN SZINT · 1 KAMERA</span></div>
+      <section class="leaderboard" aria-labelledby="leaderboard-title"><div class="eyebrow"><span class="eyebrow-line"></span> ŰRUTAZÓK DICSŐSÉGFALA</div><h2 id="leaderboard-title">Top 10</h2><ol id="leaderboard-list" class="leaderboard-list"></ol><p class="leaderboard-note" id="leaderboard-note">Ezen az eszközön elért eredmények.</p></section>
       <div class="rules"><div><span class="rule-num">01</span><span>Ha meglátod a riasztást,<br><b>bújj el, mielőtt lejár az idő.</b></span></div><div><span class="rule-num">02</span><span>Gyere vissza időben, és figyelj:<br><b>minden szint nehezebb, jöhet csapda is.</b></span></div></div>
       <div class="privacy-note"><span class="lock-icon">▣</span> A kameraképed ezen az eszközön marad. A játék csak azt figyeli, lát-e arcot.</div>
     </section>
@@ -44,6 +47,7 @@
     <footer><span>ŰRFIGYELŐ <span class="footer-dot">·</span> EGY KIS JÁTÉK BÁTOR ŰRUTAZÓKNAK</span><span>V1.0 <span class="footer-dot">·</span> <span class="footer-status">MINDEN RENDSZER MŰKÖDIK</span></span></footer>
   </main>
   <div class="result-modal hidden" id="result-modal"><div class="result-card"><div class="result-symbol" id="result-symbol">✳</div><span class="alert-label">A KÜLDETÉS VÉGET ÉRT</span><h2 id="result-title">Vesztettél!</h2><p id="result-copy">Az űr meglátott.</p><div class="result-stats" id="result-stats" aria-live="polite"></div><button class="primary-button" id="play-again" type="button"><span>Újra próbálom</span><span class="arrow">↻</span></button><button class="text-button close-result" id="close-result" type="button">Vissza a kezdőlapra</button></div></div>
+  <script src="leaderboard-config.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
