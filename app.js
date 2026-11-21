@@ -25,10 +25,11 @@ function loadFaceDetectionScript() {
 function status(text) { $('face-status').textContent = text; }
 function difficulty() {
   const step = round - 1;
+  const extra = Math.max(0, round - 4);
   return {
-    hide: Math.max(1800, 3000 - step * 100),
-    return: Math.max(2500, 4000 - step * 90),
-    wait: Math.max(1100, 3200 - step * 100) + Math.random() * Math.max(900, 4000 - step * 100)
+    hide: Math.max(1700, 3000 - step * 100 - extra * 70),
+    return: Math.max(2300, 4000 - step * 90 - extra * 90),
+    wait: Math.max(800, 3200 - step * 100 - extra * 150) + Math.random() * Math.max(700, 4000 - step * 100 - extra * 140)
   };
 }
 function showState(next) {
@@ -66,8 +67,9 @@ function beep(freq = 620, duration = .12) {
 }
 
 function selectTwist() {
-  if (round < 3 || Math.random() > Math.min(.62, .24 + round * .025)) return null;
-  const twists = round >= 7 ? ['fake', 'urgent', 'double', 'echo', 'bonus'] : ['fake', 'urgent', 'double'];
+  if (round < 3 || Math.random() > Math.min(.75, .32 + round * .04)) return null;
+  if (round >= 7 && Math.random() < .1) return 'bonus';
+  const twists = round >= 5 ? ['fake', 'urgent', 'double', 'echo', 'rush'] : ['fake', 'urgent', 'double'];
   return twists[Math.floor(Math.random() * twists.length)];
 }
 function beginRound() {
@@ -95,8 +97,14 @@ function startCountdown(which, duration, onEnd) {
 }
 function beginHideWindow() {
   if (!gameStarted) return;
-  showState('hide'); $('countdown').textContent = Math.ceil(difficulty().hide / 1000); beep(270, .18);
-  startCountdown('hide', difficulty().hide, () => {
+  const hideDuration = activeTwist === 'rush' ? Math.max(1800, difficulty().hide * .78) : difficulty().hide;
+  showState('hide');
+  if (activeTwist === 'rush') {
+    $('alert-label').textContent = 'VILLÁMRIASZTÁS'; $('alert-title').textContent = 'AZONNAL BÚJJ EL!';
+    $('countdown-hint').textContent = 'CSAK 2 MP-ED VAN ELTŰNNI';
+  }
+  $('countdown').textContent = Math.ceil(hideDuration / 1000); beep(270, .18);
+  startCountdown('hide', hideDuration, () => {
     if (faceVisible) { finish(false, 'Nem bújtál el időben. Az űr meglátta az arcod.'); return; }
     beginReturnWindow();
   });
