@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070914">
+  <title>Űrfigyelő — bújj el!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Űrfigyelő főoldal"><span class="brand-mark">✳</span> ŰRFIGYELŐ</a>
+      <div class="top-status"><span class="live-dot"></span><span id="system-status">RENDSZER KÉSZENLÉTBEN</span></div>
+      <button class="sound-button" id="sound-button" type="button" aria-label="Hang be- és kikapcsolása">♫ <span>HANG</span></button>
+    </header>
+
+    <section class="intro" id="intro">
+      <div class="eyebrow"><span class="eyebrow-line"></span> EGY JÁTÉK A LÁTHATATLANSÁGRÓL</div>
+      <h1>Elég ügyes vagy,<br><span>hogy elbújj?</span></h1>
+      <p class="lede">Az űr figyel. Amikor felvillan a riasztás, tüntesd el az arcod a kamera elől. De ne maradj túl sokáig odalent.</p>
+      <div class="intro-actions"><button class="primary-button" id="start-button" type="button"><span>Induljon a játék</span><span class="arrow">↗</span></button><span class="duration">VÉGTELEN SZINT · 1 KAMERA</span></div>
+      <div class="rules"><div><span class="rule-num">01</span><span>Ha meglátod a riasztást,<br><b>bújj el, mielőtt lejár az idő.</b></span></div><div><span class="rule-num">02</span><span>Gyere vissza időben, és figyelj:<br><b>minden szint nehezebb, jöhet csapda is.</b></span></div></div>
+      <div class="privacy-note"><span class="lock-icon">▣</span> A kameraképed ezen az eszközön marad. A játék csak azt figyeli, lát-e arcot.</div>
+    </section>
+
+    <section class="game hidden" id="game" aria-live="polite">
+      <div class="game-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> MÉLYŰRI KÜLDETÉS</div><h2 id="game-title">Készen állsz?</h2></div><div class="score"><span>SZINT</span><b id="round-count">01</b></div></div>
+      <div class="game-card" id="game-card">
+        <div class="planet planet-one"></div><div class="planet planet-two"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="game-message" id="game-message"><div class="scan-line"></div><span class="signal-label">BEJÖVŐ JEL · 0042</span><h3>AZ ŰR MÉG<br><span>NYUGODT.</span></h3><p>Tartsd szemmel a jelzést.</p></div>
+        <div class="alert-overlay hidden" id="alert-overlay"><div class="alert-icon">!</div><span class="alert-label" id="alert-label">VESZÉLYES ÉSZLELÉS</span><h3 id="alert-title">BÚJJ EL!</h3><div class="countdown" id="countdown">3</div><span class="countdown-hint" id="countdown-hint">MÁSODPERCED MARADT</span></div>
+        <div class="return-overlay hidden" id="return-overlay"><span class="return-icon" id="return-icon">⌁</span><span class="alert-label" id="return-label">A JEL ELTŰNT</span><div class="return-number" id="return-number">4</div><span class="countdown-hint" id="return-hint">TÚL SOKÁIG NE MARADJ ODA LENT</span></div>
+        <div class="game-hud"><span><i class="hud-dot"></i> <span id="face-status">KAMERA KIKAPCSOLVA</span></span><span id="elapsed">00:00</span></div>
+      </div>
+      <div class="game-bottom"><div class="camera-area"><div class="camera-frame"><video id="camera" autoplay muted playsinline></video><div class="camera-placeholder" id="camera-placeholder"><span>◎</span><small>AZ ARCOD HELYE</small></div><div class="face-outline hidden" id="face-outline"></div></div><div class="camera-copy"><b>Az őrszem szeme</b><span id="camera-help">Kapcsold be a kamerát az észleléshez.</span></div></div><button class="secondary-button" id="camera-button" type="button">Kamera bekapcsolása <span>↗</span></button></div>
+      <div class="game-controls hidden" id="game-controls"><button class="text-button" id="pause-button" type="button">Ⅱ &nbsp; Szünet</button><button class="text-button" id="restart-button" type="button">↻ &nbsp; Újrakezdés</button></div>
+    </section>
+
+    <footer><span>ŰRFIGYELŐ <span class="footer-dot">·</span> EGY KIS JÁTÉK BÁTOR ŰRUTAZÓKNAK</span><span>V1.0 <span class="footer-dot">·</span> <span class="footer-status">MINDEN RENDSZER MŰKÖDIK</span></span></footer>
+  </main>
+  <div class="result-modal hidden" id="result-modal"><div class="result-card"><div class="result-symbol" id="result-symbol">✳</div><span class="alert-label">A KÜLDETÉS VÉGET ÉRT</span><h2 id="result-title">Vesztettél!</h2><p id="result-copy">Az űr meglátott.</p><button class="primary-button" id="play-again" type="button"><span>Újra próbálom</span><span class="arrow">↻</span></button><button class="text-button close-result" id="close-result" type="button">Vissza a kezdőlapra</button></div></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
